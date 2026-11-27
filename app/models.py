@@ -36,7 +36,7 @@ class User(UserBase, table=True):
     hashed_password: str
     role: Role = Field(default=Role.USER)
     posts: list["Post"] = Relationship(back_populates="author")
-    posts: list["Post"] = Relationship(back_populates="author")
+
 
 
 class UserCreate(UserBase):  # ENTRA al registrarse: tiene password, NO tiene role
@@ -74,7 +74,7 @@ class Post(PostBase, table=True):
 class PostCreate(PostBase):
     # TODO 5: hoy el cliente manda author_id (heredado de la clase 1). ¡Es el agujero!
     #         Quita este campo: el autor saldrá del token en routers/posts.py.
-    author_id: int
+    pass
 
 
 class PostUpdate(SQLModel):
