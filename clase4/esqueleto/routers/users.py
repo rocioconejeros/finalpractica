@@ -96,8 +96,16 @@ def read_followers(
     #       .offset(offset).limit(limit)
     #   )
     #   return db.exec(stmt).all()
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 5: followers")
-
+    get_user_or_404(db, user_id)
+    stmt = (
+        select(Post)
+        .join(Like, col(Like.post_id) == col(Post.id))
+        .where(Like.user_id == user_id)
+        .order_by(col(Like.created_at).desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    return db.exec(stmt).all()
 
 @router.get("/{user_id}/following", response_model=list[UserPublic])
 def read_following(
