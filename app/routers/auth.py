@@ -20,7 +20,16 @@ def register(data: UserCreate, db: SessionDep):
     #   b) crear User(username=data.username, hashed_password=hash_password(data.password))
     #      → la contraseña en claro NUNCA se guarda
     #   c) db.add → db.commit → db.refresh → return user
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 2: registro")
+
+    existing = db.exec(select(User).where(User.username == data.username)).first()
+    if existing:
+        raise HTTPException(status.HTTP_409_CONFLICT, "El username ya existe")
+    user = User(username=data.username, hashed_password=hash_password(data.password))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
 
 
 @router.post("/login", response_model=Token)
@@ -30,7 +39,10 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], db: SessionDep)
     #   b) si no existe, o verify_password(form.password, user.hashed_password) es False
     #      → raise credentials_error()      (mismo error para ambos casos: ¿por qué?)
     #   c) return Token(access_token=create_access_token(user.id))
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 3: login")
+    user = db.exec(select(User).where(User.username == form.username)).first()
+    if user is None or not verify_password(form.password, user.hashed_password):
+        raise credentials_error()
+    return Token(access_token=create_access_token(user.id))
 
 
 @router.get("/me", response_model=UserMe)

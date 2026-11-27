@@ -32,6 +32,10 @@ class User(UserBase, table=True):
     #   hashed_password: str           → el hash, NUNCA la contraseña en claro
     #   role: Role = Field(default=Role.USER)
     # (Borra clase2.db y reinicia después de cambiar la tabla.)
+    
+    hashed_password: str
+    role: Role = Field(default=Role.USER)
+    posts: list["Post"] = Relationship(back_populates="author")
     posts: list["Post"] = Relationship(back_populates="author")
 
 
