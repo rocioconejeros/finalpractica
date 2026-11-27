@@ -36,7 +36,7 @@ class User(UserBase, table=True):
     hashed_password: str
     role: Role = Field(default=Role.USER)
     posts: list["Post"] = Relationship(back_populates="author")
-    posts: list["Post"] = Relationship(back_populates="author")
+
 
 
 class UserCreate(UserBase):  # ENTRA al registrarse: tiene password, NO tiene role
