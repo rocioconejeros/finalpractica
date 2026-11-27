@@ -36,6 +36,29 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 #
 #   Y úsalas en los dos GET de abajo (cambia también el response_model).
 #   Pregunta: ¿por qué isouter=True? Prueba quitarlo y mira qué pasa con un post sin likes.
+
+def posts_with_likes():
+    """SELECT posts.*, COUNT(likes.user_id)
+       FROM posts LEFT JOIN likes ON likes.post_id = posts.id
+       GROUP BY posts.id"""
+    return (
+        select(Post, func.count(col(Like.user_id)))
+        .join(Like, col(Like.post_id) == col(Post.id), isouter=True)
+        .group_by(col(Post.id))
+    )
+
+
+def to_post_with_likes(row) -> PostWithLikes:
+    post, likes_count = row        # cada fila es una tupla (Post, int)
+    return PostWithLikes.model_validate(post, update={"likes_count": likes_count})
+
+
+def get_post_with_likes_or_404(db: Session, post_id: int) -> PostWithLikes:
+    row = db.exec(posts_with_likes().where(Post.id == post_id)).first()
+    if row is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Post no encontrado")
+    return to_post_with_likes(row)
+
 @router.get("", response_model=list[PostPublic])
 def read_posts(db: SessionDep, offset: int = 0, limit: Annotated[int, Query(le=100)] = 20):
     stmt = select(Post).order_by(col(Post.created_at).desc()).offset(offset).limit(limit)
@@ -86,7 +109,13 @@ def like_post(post_id: int, db: SessionDep, current_user: CurrentUser):
     #   c) si like es None: db.add(Like(user_id=current_user.id, post_id=post_id)) y db.commit()
     #      (si ya existía, no hagas nada)
     #   d) return get_post_with_likes_or_404(db, post_id)     → el cliente ve el conteo nuevo
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 3: dar like")
+    
+    get_post_or_404(db, post_id)
+    like = db.get(Like, (current_user.id, post_id))
+    if like is None:
+        db.add(Like(user_id=current_user.id, post_id=post_id))
+        db.commit()
+    return get_post_with_likes_or_404(db, post_id)
 
 
 @router.delete("/{post_id}/like", response_model=PostWithLikes)
