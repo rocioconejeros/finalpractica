@@ -155,6 +155,7 @@ def read_post_likes(
         .join(Like, col(Like.user_id) == col(User.id))
         .where(Like.post_id == post_id)
         .order_by(col(Like.created_at).desc())
-        .offset(offset).limit(limit)
+        .offset(offset)
+        .limit(limit)
     )
     return db.exec(stmt).all()
