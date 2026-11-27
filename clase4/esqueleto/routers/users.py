@@ -114,4 +114,13 @@ def read_following(
     # TODO 6 (DESAFÍO, sin código): es el espejo del TODO 5, con las columnas INVERTIDAS.
     #   Dibuja en el pizarrón dos filas de la tabla follows y decide cuál columna va en el join
     #   y cuál en el where. Este es el error que más se comete en esta clase.
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 6: following")
+    get_user_or_404(db, user_id)
+    stmt = (
+        select(User)
+        .join(Follow, col(Follow.follower_id) == col(User.id))
+        .where(Follow.followed_id == user_id)
+        .order_by(col(Follow.created_at).desc())
+        .offset(offset).limit(limit)
+    )
+    return db.exec(stmt).all()
+
