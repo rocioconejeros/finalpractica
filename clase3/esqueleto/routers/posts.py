@@ -37,10 +37,11 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 #   Y úsalas en los dos GET de abajo (cambia también el response_model).
 #   Pregunta: ¿por qué isouter=True? Prueba quitarlo y mira qué pasa con un post sin likes.
 
+# ═══════════════ Lectura de posts CON la cuenta de likes ═══════════════
 def posts_with_likes():
     """SELECT posts.*, COUNT(likes.user_id)
-       FROM posts LEFT JOIN likes ON likes.post_id = posts.id
-       GROUP BY posts.id"""
+        FROM posts LEFT JOIN likes ON likes.post_id = posts.id
+        GROUP BY posts.id"""
     return (
         select(Post, func.count(col(Like.user_id)))
         .join(Like, col(Like.post_id) == col(Post.id), isouter=True)
@@ -49,7 +50,7 @@ def posts_with_likes():
 
 
 def to_post_with_likes(row) -> PostWithLikes:
-    post, likes_count = row        # cada fila es una tupla (Post, int)
+    post, likes_count = row  # cada fila es una tupla (Post, int)
     return PostWithLikes.model_validate(post, update={"likes_count": likes_count})
 
 
@@ -59,15 +60,16 @@ def get_post_with_likes_or_404(db: Session, post_id: int) -> PostWithLikes:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Post no encontrado")
     return to_post_with_likes(row)
 
-@router.get("", response_model=list[PostPublic])
+
+@router.get("", response_model=list[PostWithLikes])
 def read_posts(db: SessionDep, offset: int = 0, limit: Annotated[int, Query(le=100)] = 20):
-    stmt = select(Post).order_by(col(Post.created_at).desc()).offset(offset).limit(limit)
-    return db.exec(stmt).all()
+    stmt = posts_with_likes().order_by(col(Post.created_at).desc()).offset(offset).limit(limit)
+    return [to_post_with_likes(row) for row in db.exec(stmt).all()]
 
 
-@router.get("/{post_id}", response_model=PostPublic)
+@router.get("/{post_id}", response_model=PostWithLikes)
 def read_post(post_id: int, db: SessionDep):
-    return get_post_or_404(db, post_id)
+    return get_post_with_likes_or_404(db, post_id)
 
 
 # ═══════════════ CRUD de la clase 2 (sin cambios) ═══════════════
