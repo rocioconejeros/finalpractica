@@ -26,7 +26,12 @@ def create_post(data: PostCreate, db: SessionDep, current_user: CurrentUser):
     #   (Primero quita author_id de PostCreate en models.py.)
     #   post = Post(**data.model_dump(), author_id=current_user.id)
     #   → db.add → db.commit → db.refresh → return post
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 5: crear post")
+    post = Post(**data.model_dump(), author_id=current_user.id)
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    return post
+    
 
 
 @router.patch("/{post_id}", response_model=PostPublic)
@@ -36,8 +41,13 @@ def update_post(post_id: int, data: PostUpdate, db: SessionDep, current_user: Cu
     #   require(post.author_id == current_user.id or is_admin(current_user))   → si no, 403
     #   post.sqlmodel_update(data.model_dump(exclude_unset=True))
     #   → db.add → db.commit → db.refresh → return post
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 6: editar post")
-
+    post = get_post_or_404(db, post_id)
+    require(post.author_id == current_user.id or is_admin(current_user))
+    post.sqlmodel_update(data.model_dump(exclude_unset=True))
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    return post
 
 @router.delete("/{post_id}", status_code=204)
 def delete_post(post_id: int, db: SessionDep, current_user: CurrentUser):
