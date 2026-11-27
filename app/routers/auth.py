@@ -20,7 +20,16 @@ def register(data: UserCreate, db: SessionDep):
     #   b) crear User(username=data.username, hashed_password=hash_password(data.password))
     #      → la contraseña en claro NUNCA se guarda
     #   c) db.add → db.commit → db.refresh → return user
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 2: registro")
+
+    existing = db.exec(select(User).where(User.username == data.username)).first()
+    if existing:
+        raise HTTPException(status.HTTP_409_CONFLICT, "El username ya existe")
+    user = User(username=data.username, hashed_password=hash_password(data.password))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
 
 
 @router.post("/login", response_model=Token)
