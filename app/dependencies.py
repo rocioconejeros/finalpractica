@@ -29,7 +29,7 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: SessionD
     #   3) user = db.get(User, user_id)
     #   4) si user es None → raise credentials_error()
     #   5) return user
-user_id = read_access_token(token)
+    user_id = read_access_token(token)
     if user_id is None:
         raise credentials_error()
     user = db.get(User, user_id)

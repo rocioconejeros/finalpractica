@@ -39,7 +39,7 @@ def login(form: Annotated[OAuth2PasswordRequestForm, Depends()], db: SessionDep)
     #   b) si no existe, o verify_password(form.password, user.hashed_password) es False
     #      → raise credentials_error()      (mismo error para ambos casos: ¿por qué?)
     #   c) return Token(access_token=create_access_token(user.id))
-        user = db.exec(select(User).where(User.username == form.username)).first()
+    user = db.exec(select(User).where(User.username == form.username)).first()
     if user is None or not verify_password(form.password, user.hashed_password):
         raise credentials_error()
     return Token(access_token=create_access_token(user.id))
