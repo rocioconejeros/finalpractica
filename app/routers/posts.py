@@ -52,4 +52,7 @@ def update_post(post_id: int, data: PostUpdate, db: SessionDep, current_user: Cu
 @router.delete("/{post_id}", status_code=204)
 def delete_post(post_id: int, db: SessionDep, current_user: CurrentUser):
     # TODO 7: mismas reglas que editar. Borra con db.delete(post) y db.commit().
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 7: borrar post")
+    post = get_post_or_404(db, post_id)
+    require(post.author_id == current_user.id or is_admin(current_user))
+    db.delete(post)
+    db.commit()
