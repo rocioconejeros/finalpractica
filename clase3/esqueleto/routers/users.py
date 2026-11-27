@@ -31,3 +31,13 @@ def read_user_likes(
     #   Recuerda: 404 si el usuario no existe, y orden/paginación como en los otros listados.
     #   (Agrega a los imports de arriba lo que necesites: Like, Post.)
     
+    get_user_or_404(db, user_id)
+    stmt = (
+        select(Post)
+        .join(Like, col(Like.post_id) == col(Post.id))
+        .where(Like.user_id == user_id)
+        .order_by(col(Like.created_at).desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    return db.exec(stmt).all()
