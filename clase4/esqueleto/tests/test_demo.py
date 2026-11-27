@@ -131,8 +131,31 @@ def test_followers_and_following_are_not_mixed_up(client):
     #     - followers de bob   == ["alice"]             - following de bob   == []
     #   Pistas: register_and_login(client, "alice") devuelve los headers; user_id(client, headers) el id.
     #   Bonus: invierte a propósito el .join de followers en users.py y mira cómo falla.
-    pytest.fail("TODO 9: escribe este test")
+   #pytest.fail("TODO 9: escribe este test")
+def test_followers_and_following_are_not_mixed_up(client):
+    alice = register_and_login(client, "alice")
+    bob = register_and_login(client, "bob")
+    carol = register_and_login(client, "carol")
+    dave = register_and_login(client, "dave")
 
+    alice_id = user_id(client, alice)
+    bob_id = user_id(client, bob)
+    carol_id = user_id(client, carol)
+
+    # alice sigue a bob y a carol; dave sigue a alice
+    assert client.put(f"/users/{bob_id}/follow", headers=alice).status_code == 200
+    assert client.put(f"/users/{carol_id}/follow", headers=alice).status_code == 200
+    assert client.put(f"/users/{alice_id}/follow", headers=dave).status_code == 200
+
+    alice_following = [u["username"] for u in client.get(f"/users/{alice_id}/following").json()]
+    alice_followers = [u["username"] for u in client.get(f"/users/{alice_id}/followers").json()]
+    bob_followers = [u["username"] for u in client.get(f"/users/{bob_id}/followers").json()]
+    bob_following = [u["username"] for u in client.get(f"/users/{bob_id}/following").json()]
+
+    assert sorted(alice_following) == ["bob", "carol"]
+    assert alice_followers == ["dave"]
+    assert bob_followers == ["alice"]
+    assert bob_following == []
 
 # ── Feed ───────────────────────────────────────────────────────────────────────
 def test_feed_only_has_posts_from_followed_users_and_updates_on_unfollow(client):
