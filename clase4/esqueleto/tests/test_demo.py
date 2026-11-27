@@ -124,15 +124,6 @@ def test_unfollow_and_unfollow_again(client):
 
 
 def test_followers_and_following_are_not_mixed_up(client):
-    # TODO 9: escribe este test tú. Es el que te protege del error clásico (listas invertidas).
-    #   Escenario: alice sigue a bob y a carol; dave sigue a alice.
-    #   Comprueba (usa GET /users/{id}/followers y /following, comparando los usernames):
-    #     - following de alice == ["bob", "carol"]      - followers de alice == ["dave"]
-    #     - followers de bob   == ["alice"]             - following de bob   == []
-    #   Pistas: register_and_login(client, "alice") devuelve los headers; user_id(client, headers) el id.
-    #   Bonus: invierte a propósito el .join de followers en users.py y mira cómo falla.
-   #pytest.fail("TODO 9: escribe este test")
-def test_followers_and_following_are_not_mixed_up(client):
     alice = register_and_login(client, "alice")
     bob = register_and_login(client, "bob")
     carol = register_and_login(client, "carol")
