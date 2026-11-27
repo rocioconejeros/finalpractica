@@ -3,8 +3,11 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlmodel import col, select
 
+from models import Post, PostCreate, PostPublic, PostUpdate, PostWithLikes, UserPublic, User
+from sqlmodel import Session, col, func, select
+
 from dependencies import CurrentUser, SessionDep, get_post_or_404, is_admin, require
-from models import Post, PostCreate, PostPublic, PostUpdate, PostWithLikes, UserPublic
+from models import Like, Post, PostCreate, PostPublic, PostUpdate, PostWithLikes, User, UserPublic
 
 # TODO 1 (cont.): cuando tengas la tabla Like, agrégala al import de models de arriba
 #                 (y también `User`, `func` de sqlmodel y `Session` de sqlmodel cuando los pidan).

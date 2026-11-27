@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from pydantic import StringConstraints
+from sqlalchemy import CheckConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -115,3 +116,14 @@ class Like(SQLModel, table=True):
 #       __table_args__ = (CheckConstraint("follower_id != followed_id", name="no_self_follow"),)
 #   Pregunta: ¿por qué no basta con validarlo solo en el endpoint?
 #   (Borra clase4.db y reinicia después de agregar la tabla.)
+class Follow(SQLModel, table=True):
+    """Tabla de ENLACE de users CONSIGO MISMA. Una fila = "follower sigue a followed".
+    Ojo con la dirección: follower_id es QUIEN sigue, followed_id es A QUIÉN sigue."""
+
+    __tablename__ = "follows"
+    # Defensa en profundidad: la API ya rechaza seguirse a uno mismo, pero la base lo garantiza igual.
+    __table_args__ = (CheckConstraint("follower_id != followed_id", name="no_self_follow"),)
+
+    follower_id: int = Field(foreign_key="users.id", primary_key=True, ondelete="CASCADE")
+    followed_id: int = Field(foreign_key="users.id", primary_key=True, ondelete="CASCADE")
+    created_at: datetime = Field(default_factory=utcnow)

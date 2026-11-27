@@ -5,6 +5,8 @@ from sqlmodel import col, select
 
 from dependencies import SessionDep, get_user_or_404
 from models import PostPublic, UserPublic
+from models import Like, Post, PostPublic, UserPublic
+
 
 router = APIRouter(prefix="/users", tags=["users"])
 
