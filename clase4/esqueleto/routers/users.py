@@ -94,8 +94,15 @@ def unfollow_user(user_id: int, db: SessionDep, current_user: CurrentUser):
     # TODO 4: dejar de seguir. Misma idea al revés, y también idempotente.
     #   a) target = get_user_or_404   b) follow = db.get(Follow, (current_user.id, user_id))
     #   c) si follow existe: db.delete(follow) y db.commit()   d) return to_profile(db, target)
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 4: dejar de seguir")
-
+   # raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 4: dejar de seguir")
+@router.delete("/{user_id}/follow", response_model=UserProfile)
+def unfollow_user(user_id: int, db: SessionDep, current_user: CurrentUser):
+    target = get_user_or_404(db, user_id)
+    follow = db.get(Follow, (current_user.id, user_id))
+    if follow is not None:
+        db.delete(follow)
+        db.commit()
+    return to_profile(db, target)
 
 # ═══════════════ Listas: followers vs following ═══════════════
 # Follow tiene DOS claves foráneas hacia users, así que el JOIN necesita la condición explícita.
@@ -116,6 +123,22 @@ def read_followers(
     #       .offset(offset).limit(limit)
     #   )
     #   return db.exec(stmt).all()
+
+    @router.get("/{user_id}/followers", response_model=list[UserPublic])
+def read_followers(
+    user_id: int, db: SessionDep, offset: int = 0, limit: Annotated[int, Query(le=100)] = 20
+):
+    get_user_or_404(db, user_id)
+    stmt = (
+        select(User)
+        .join(Follow, col(Follow.follower_id) == col(User.id))
+        .where(Follow.followed_id == user_id)
+        .order_by(col(Follow.created_at).desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    return db.exec(stmt).all()
+
     get_user_or_404(db, user_id)
     stmt = (
         select(Post)
